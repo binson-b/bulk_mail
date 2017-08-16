@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 import time
 import sys
 from datetime import datetime
+import os
 from mako.template import Template
 
 
@@ -22,13 +23,14 @@ from mako.template import Template
 
 def email_send(to, subject, msg):
     try:
-        mail_from = "certificates@fossee.in"
+        mail_from = mail_box[i]
         message = MIMEText(msg, 'html')
-        message['Subject'] = subject
+        message['Subject'] = subject[i]
         message['From'] = mail_from
         message['to'] = to
-        message['reply-to'] = 'certificates@fossee.in'
-        message['return-to'] = 'certificates@fossee.in'
+        #message['cc'] = mail_from
+        message['reply-to'] = "workshops@fossee.in" #'certificates@fossee.in'
+        message['return-to'] = "workshops@fossee.in" #'certificates@fossee.in'
         smtpObj.sendmail(mail_from, to, message.as_string())
         return "Successfully sent"
     except smtplib.SMTPException, e:
@@ -48,16 +50,18 @@ smtpObj.ehlo()
 smtpObj.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
 smtpObj.login(username, password)
 domain_list = ['gmail.com']
-
+i = input("Please select the desired one {0:'certificates@fossee.in', 1:'workshops@fossee.in'}: ")
 
 
 try:
     file_name = sys.argv[1]
     email_file = open(file_name, 'r')
     names_emails = email_file.readlines()
-    subject = 'Python Workshop Certificate, FOSSEE'
+    mail_box = {0:'certificates@fossee.in', 1:'workshops@fossee.in'}
+    subject = {0:'Python Workshop Certificate, FOSSEE', 1:'Invitation for Python Workshop from FOSSEE, IIT Bombay FOSSEE'}
+    template_loc = {0:os.path.abspath('html_templates/certificate_mail.html'), 1:os.path.abspath('html_templates/invitation_email.html')}
     for line in  names_emails:
-        msg_to_send = open('/home/binson/workspace/Mail/html_templates/certificate_mail.html', 'r')
+        msg_to_send = open(template_loc[i], 'r')
         # fname, lname,  email = line.split(',')
         fname, email = line.split(',')
         email = email.strip('\n')
