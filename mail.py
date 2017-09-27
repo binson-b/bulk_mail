@@ -5,6 +5,7 @@ import sys
 from datetime import datetime
 import os
 from mako.template import Template
+from domain_list import domain_list
 
 
 # import sqlite3
@@ -16,11 +17,6 @@ from mako.template import Template
 # conn.close()
 # print dir(results)
 
-'''
-['gmail.com', 'ammini.edu.in', 'aryanet.org', 'awhengg.org', 'btcc.ac.in', 'bccaarmel.ac.in', 'yahoo.com', 'christknowledgecity.com', 'eranadknowledgecity.com', 'fisat.ac.in', 'hcet.in', 'yahoo.in', 'HOLYKINGSCOLLEGE.COM', 'iesce.info', 'icet.ac.in', 'igmt.org', 'jaibharathengg.com', 'rediffmail.com', 'jcmcsiit.ac.in', 'jecc.ac.in', 'kmeacollege.ac.in', 'KRGCE.IN', 'kmpce.org', 'meaec.edu.in', 'anjarakandy.in', 'mangalam.in', 'mbcpeermade.com', 'mbcet.org', 'MBITS.EDU.IN', 'marian.ac.in', 'mesitam.ac.in', 'mcetonline.com', 'mookambika.ac.in', 'musaliarcollege.com', 'musaliarcollegeckl.in', 'macev.org', 'muthootgroup.com', 'nmitkerala.ac.in', 'paacet.com', 'pinnacle.ac.in', 'providencecollege.org', 'riet.edu.in', 'royalcet.ac.in', 'saintgits.org', 'sist.in', 'scmsgroup.org', 'snmimt.edu.in', 'sbce.ac.in', 'bsnl.in', 'sngist.org', 'sngce.ac.in', 'snit.edu.in', 'sjcetpalai.ac.in', 'stcet.net', 'stisttvm.edu.in', 'tkmit.ac.in', 'tistcochin.edu.in', 'toms.ac.in', 'universalcollege.net', 'vedavyasa.org', 'vidyaacademy.ac.in', 'vidyatcklmr.ac.in', 'visat.ac.in', 'vjec.ac.in', 'vjcet.org', 'ycet.ac.in', 'yit.ac.in', 'fossee.in']
-'''
-
-
 def email_send(to, subject, msg):
     try:
         mail_from = mail_box[i]
@@ -29,8 +25,8 @@ def email_send(to, subject, msg):
         message['From'] = mail_from
         message['to'] = to
         #message['cc'] = mail_from
-        message['reply-to'] = "workshops@fossee.in" #'certificates@fossee.in'
-        message['return-to'] = "workshops@fossee.in" #'certificates@fossee.in'
+        message['reply-to'] = mail_box[i]
+        message['return-path'] = "bounce-mail@fossee.in" #'certificates@fossee.in'
         smtpObj.sendmail(mail_from, to, message.as_string())
         return "Successfully sent"
     except smtplib.SMTPException, e:
@@ -49,8 +45,8 @@ smtpObj.starttls()
 smtpObj.ehlo()
 smtpObj.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
 smtpObj.login(username, password)
-domain_list = ['gmail.com', 'yahoo.in']
-i = input("Please select the desired one {0:'certificates@fossee.in', 1:'workshops@fossee.in', 2:'test@fossee.in'}: ")
+
+i = input("Please select the desired one {\n0:'certificates@fossee.in',\n1:'workshops@fossee.in',\n2:'coodinator-certificate',\n3:'test@fossee.in'\n}: ")
 
 
 try:
@@ -60,18 +56,21 @@ try:
     mail_box = {
                 0:'certificates@fossee.in',
                 1:'workshops@fossee.in',
-                2:'bnsn.babu@gmail.com'
+                3:'test@fossee.in'
     }
+    mail_box.update({2: mail_box[0],})
     subject = {
                 0:'Python Workshop Certificate, FOSSEE',
-                1:'Invitation for Python Workshop from FOSSEE, IIT Bombay FOSSEE',
-                2: 'TEST'
+                1:'Remote-assisted Python Workshop by FOSSEE, IIT Bombay',
+                3: 'TEST'
     }
+    subject.update({2: subject[0],})
     print 'mail-box: %s\nsubject: %s' % (mail_box[i], subject[i])
     template_loc = {
                     0:os.path.abspath('html_templates/certificate_mail.html'),
-                    1:os.path.abspath('html_templates/invitation_email.html'),
-                    2:os.path.abspath('html_templates/new2.html')
+                    1:os.path.abspath('html_templates/python_workshop_invite_2017-0.html'),
+                    2:os.path.abspath('html_templates/coordinator_certificate.html'),
+                    3:os.path.abspath('html_templates/test.html')
     }
     for line in  names_emails:
         msg_to_send = open(template_loc[i], 'r')
@@ -91,7 +90,7 @@ try:
                     message = email_send(email, subject, templ)
                     print '>>>>>', fname if fname else email
                 domain_list.append(email_domain)
-            except dns.resolver.NoAnswer:
+            except (dns.resolver.NoAnswer ,dns.exception.Timeout,dns.resolver.NXDOMAIN):
                 message = 'no email'
                 bounce_emails.write('\n\n{0},{1}'.format(fname,email))
                 log.write('{0}\t{1}\t{2}\n'.format(email.strip(), message, datetime.now()))
@@ -108,6 +107,7 @@ try:
     email_file.close()
     print domain_list
     bounce_emails.close()
+    os.rename(file_name,file_name[:-4]+'-completed.csv')
 except IndexError:
     e = 'pass a single file argument after the python file'
     log.write('{0}\n'.format(e))
