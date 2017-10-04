@@ -6,6 +6,7 @@ from datetime import datetime
 import os
 from mako.template import Template
 from domain_list import domain_list
+from local_settings import username, password
 
 
 # import sqlite3
@@ -36,8 +37,6 @@ def email_send(to, subject, msg):
 log = open('mail.log', 'a')
 log.write('\n\n############ {0} ############\n\n'.format(datetime.now()))
 bounce_emails = open('mail-bounce.csv','a')
-username = "P17153" 
-password = 'binson@123'
 smtpObj = smtplib.SMTP(host='smtp-auth.iitb.ac.in', port=25)
 # smtpObj = smtplib.SMTP(host='smtp.gmail.com', port=587) # doesnot work with iitb net
 smtpObj.ehlo()
@@ -46,7 +45,19 @@ smtpObj.ehlo()
 smtpObj.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
 smtpObj.login(username, password)
 
-i = input("Please select the desired one {\n0:'certificates@fossee.in',\n1:'workshops@fossee.in',\n2:'coodinator-certificate',\n3:'test@fossee.in'\n}: ")
+print """
+#####################################################
+#                                                   #
+#  0:'certificates@fossee.in'                       #
+#  1:'workshops@fossee.in'                          #
+#  2:'coodinator-certificate'                       #
+#  3:'test@fossee.in'                               #
+#                                                   #
+#####################################################
+
+"""
+
+i = input("Please select the desired Mail-box : ")
 
 
 try:
@@ -64,7 +75,7 @@ try:
                 1:'Remote-assisted Python Workshop by FOSSEE, IIT Bombay',
                 3: 'TEST'
     }
-    subject.update({2: subject[0],})
+    subject.update({2: subject[0]})
     print 'mail-box: %s\nsubject: %s' % (mail_box[i], subject[i])
     template_loc = {
                     0:os.path.abspath('html_templates/certificate_mail.html'),
@@ -107,7 +118,8 @@ try:
     email_file.close()
     print domain_list
     bounce_emails.close()
-    os.rename(file_name,file_name[:-4]+'-completed.csv')
+    if not file_name == 'demo.csv':
+        os.rename(file_name,file_name[:-4]+'-completed.csv')
 except IndexError:
     e = 'pass a single file argument after the python file'
     log.write('{0}\n'.format(e))

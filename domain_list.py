@@ -32,5 +32,7 @@ domain_list = [
 'jaigroup.in', 'ymail.com', 'patnawomenscollege.in', 'mail.com', 'ucet.in', 'snmimt.edu.in',
 'kmeacollege.ac.in', 'dibru.ac.in', 'jimsindia.org', 'ggnindia.dronacharya.info', 'muthootgroup.com',
 'gperi.ac.in', 'HOLYKINGSCOLLEGE.COM', 'mits.ac.in', 'ncuindia.edu', 'brcm.edu.in', 'vidyatcklmr.ac.in',
-'svtm.in'
+'svtm.in''loyolacollegekerala.edu.in', 'mbcet.ac.in', 'nish.ac.in', 'asapkerala.gov.in', 'ceconline.edu',
+'lmcst.ac.in'
 ]
+
