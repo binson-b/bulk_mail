@@ -1,3 +1,5 @@
 argparse==1.2.1
 dnspython==1.15.0
 wsgiref==0.1.2
+Mako==1.0.7
+MarkupSafe==1.0
