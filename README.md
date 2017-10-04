@@ -4,7 +4,7 @@ pip install -r requirements.txt
 
 # Runs on python 2.7.6
 
-python mail.py <filename.csv> <attachments> ..
+python mail.py *filename.csv*  *attachments to be added* ..
 
 # .csv
 
