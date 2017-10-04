@@ -1,5 +1,7 @@
 import smtplib, dns.resolver
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application  import MIMEApplication
 import time
 import sys
 from datetime import datetime
@@ -7,6 +9,7 @@ import os
 from mako.template import Template
 from domain_list import domain_list
 from local_settings import username, password
+from os.path import basename
 
 
 # import sqlite3
@@ -18,16 +21,25 @@ from local_settings import username, password
 # conn.close()
 # print dir(results)
 
-def email_send(to, subject, msg):
+def email_send(to, subject, msg, files=None):
     try:
         mail_from = mail_box[i]
-        message = MIMEText(msg, 'html')
-        message['Subject'] = subject[i]
+        message = MIMEMultipart()
+        message['Subject'] = subject
         message['From'] = mail_from
         message['to'] = to
         #message['cc'] = mail_from
         message['reply-to'] = mail_box[i]
         message['return-path'] = "bounce-mail@fossee.in" #'certificates@fossee.in'
+        message.attach(MIMEText(msg, 'html'))
+        for f in files or []:
+            with open(f, "rb") as fil:
+                part = MIMEApplication(
+                    fil.read(),
+                    Name=basename(f)
+                    )
+            part['Content-Disposition'] = 'attachment; filename="%s"' % basename(f)
+            message.attach(part)
         smtpObj.sendmail(mail_from, to, message.as_string())
         return "Successfully sent"
     except smtplib.SMTPException, e:
@@ -62,6 +74,7 @@ i = input("Please select the desired Mail-box : ")
 
 try:
     file_name = sys.argv[1]
+    files = sys.argv[2:] or []
     email_file = open(file_name, 'r')
     names_emails = email_file.readlines()
     mail_box = {
@@ -92,13 +105,13 @@ try:
         templ = Template(msg_to_send.read()).render(fname=fname)
         email_domain = email[email.find('@')+1:]
         if email_domain in domain_list:
-            message = email_send(email, subject, templ)
+            message = email_send(email, subject[i], templ, files)
             print '>>>>>', fname if fname else email
         else:
             try:
                 mx_hosts = dns.resolver.query(email_domain, 'MX')
                 if mx_hosts:
-                    message = email_send(email, subject, templ)
+                    message = email_send(email, subject, templ, files)
                     print '>>>>>', fname if fname else email
                 domain_list.append(email_domain)
             except (dns.resolver.NoAnswer ,dns.exception.Timeout,dns.resolver.NXDOMAIN):
