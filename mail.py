@@ -25,6 +25,7 @@ def email_send(to, subject, msg, files=None):
     try:
         mail_from = mail_box[i]
         message = MIMEMultipart()
+        #message['Header'] = 'Scipy'
         message['Subject'] = subject
         message['From'] = mail_from
         message['to'] = to
@@ -49,21 +50,26 @@ def email_send(to, subject, msg, files=None):
 log = open('mail.log', 'a')
 log.write('\n\n############ {0} ############\n\n'.format(datetime.now()))
 bounce_emails = open('mail-bounce.csv','a')
-smtpObj = smtplib.SMTP(host='smtp-auth.iitb.ac.in', port=25)
-# smtpObj = smtplib.SMTP(host='smtp.gmail.com', port=587) # doesnot work with iitb net
-smtpObj.ehlo()
-smtpObj.starttls()
-smtpObj.ehlo()
-smtpObj.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
-smtpObj.login(username, password)
 
+def connectSMTP():
+    smtpObj = smtplib.SMTP(host='smtp-auth.iitb.ac.in', port=25)
+    # smtpObj = smtplib.SMTP(host='smtp.gmail.com', port=587) # doesnot work with iitb net
+    smtpObj.ehlo()
+    smtpObj.starttls()
+    smtpObj.ehlo()
+    smtpObj.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
+    smtpObj.login(username, password)
+    return smtpObj
+
+smtpObj = connectSMTP()
 print """
 #####################################################
 #                                                   #
 #  0:'certificates@fossee.in'                       #
 #  1:'workshops@fossee.in'                          #
 #  2:'coodinator-certificate'                       #
-#  3:'test@fossee.in'                               #
+#  3:'scipy@fossee.in',                             #
+#  9:'test@fossee.in'                               #
 #                                                   #
 #####################################################
 
@@ -80,13 +86,15 @@ try:
     mail_box = {
                 0:'certificates@fossee.in',
                 1:'workshops@fossee.in',
-                3:'test@fossee.in'
+                3:'scipy@fossee.in',
+                9:'test@fossee.in',
     }
     mail_box.update({2: mail_box[0],})
     subject = {
                 0:'Python Workshop Certificate, FOSSEE',
                 1:'Remote-assisted Python Workshop by FOSSEE, IIT Bombay',
-                3: 'TEST'
+                3: 'SciPy 2017 invitation',
+                9: 'TEST'
     }
     subject.update({2: subject[0]})
     print 'mail-box: %s\nsubject: %s' % (mail_box[i], subject[i])
@@ -94,9 +102,11 @@ try:
                     0:os.path.abspath('html_templates/certificate_mail.html'),
                     1:os.path.abspath('html_templates/python_workshop_invite_2017-0.html'),
                     2:os.path.abspath('html_templates/coordinator_certificate.html'),
-                    3:os.path.abspath('html_templates/test.html')
+                    3:os.path.abspath('html_templates/scipy_conference_2017_invite_email.html'),
+                    #3:os.path.abspath('html_templates/SciPy India 2016 - Invitation.html'),
+                    9:os.path.abspath('html_templates/test.html')
     }
-    for line in  names_emails:
+    for j, line in  enumerate(names_emails):
         msg_to_send = open(template_loc[i], 'r')
         # fname, email = line.split(',') # only use when name is there in csv
         fname = ''
@@ -111,7 +121,7 @@ try:
             try:
                 mx_hosts = dns.resolver.query(email_domain, 'MX')
                 if mx_hosts:
-                    message = email_send(email, subject, templ, files)
+                    message = email_send(email, subject[i], templ, files)
                     print '>>>>>', fname if fname else email
                 domain_list.append(email_domain)
             except (dns.resolver.NoAnswer ,dns.exception.Timeout,dns.resolver.NXDOMAIN):
@@ -126,7 +136,11 @@ try:
         log.write('{0}\t{1}\t{2}\n'.format(email.strip(), message, datetime.now()))
         log.write('{0}\n'.format(msg_to_send))
         log.write('####################################################\n\n')
-        time.sleep(5)
+        time.sleep(20)
+        # comma state
+        if not j%20 and j >= 1:
+            time.sleep(300)
+            smtpObj = connectSMTP()
     smtpObj.quit()
     email_file.close()
     print domain_list

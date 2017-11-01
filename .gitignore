@@ -102,4 +102,4 @@ ENV/
 
 #Mail Related
 recipients/*
-*.log~
+*.log~sendgrid.env
