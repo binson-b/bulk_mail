@@ -27,7 +27,6 @@ logger_e = setup_logger('mail_forward_error.log', name='Error')
 imap_host = "imap.iitb.ac.in"
 smtp_host = "smtp-auth.iitb.ac.in"
 smtp_port = 25
-<<<<<<< HEAD
 user = ""
 passwd = ""
 #msgid = "7"
