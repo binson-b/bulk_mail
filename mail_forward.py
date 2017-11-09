@@ -27,11 +27,11 @@ logger_e = setup_logger('mail_forward_error.log', name='Error')
 imap_host = "imap.iitb.ac.in"
 smtp_host = "smtp-auth.iitb.ac.in"
 smtp_port = 25
-user = "p17153"
-passwd = "binson@123"
+user = ""
+passwd = ""
 #msgid = "7"
-from_addr = "zxz@gmail.com"
-to_addr = "zbc@gmail.com"
+from_addr = "bnsn.babu@gmail.com"
+to_addr = "xomo.xz@gmail.com"
 
 client = imaplib.IMAP4(imap_host)
 client.login(user, passwd)
@@ -42,9 +42,9 @@ def create_conn():
     smtp = smtplib.SMTP(smtp_host, smtp_port)
     smtp.ehlo()
     smtp.starttls()
-    #smtp.ehlo()
-    #smtp.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
-    #smtp.login(user, passwd)
+    smtp.ehlo()
+    smtp.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
+    smtp.login(user, passwd)
     return smtp
 
 def is_connected(conn):
@@ -54,6 +54,7 @@ def is_connected(conn):
         status = -1
     return True if status == 250 else False
 
+smtp = create_conn()
 for i in msgnums[0].split():
     # open IMAP connection and fetch message with id msgid
     status, data = client.fetch(i, "(BODY.PEEK[HEADER])") # for only email header
@@ -81,14 +82,14 @@ for i in msgnums[0].split():
 	    # open authenticated SMTP connection and send message with
 	    # specified envelope from and to addresses
 	    # from_addr arg is the return-path address
-	    smtp_conn = is_connected()
+	    smtp_conn = is_connected(smtp)
 	    if not smtp_conn:
 	        smtp = create_conn()
 		smtp_conn = True
 	    if smtp_conn:
 		smtp.sendmail(from_addr, to_addr, message.as_string())
 		logger_s.info('id: %s to_email: %s email_date: %s' %(i, to_addr, message_date))
-	    #break
+	    break
 	    
 smtp.quit()
 client.close()
