@@ -27,12 +27,15 @@ logger_e = setup_logger('mail_forward_error.log', name='Error')
 imap_host = "imap.iitb.ac.in"
 smtp_host = "smtp-auth.iitb.ac.in"
 smtp_port = 25
+<<<<<<< HEAD
 user = ""
 passwd = ""
 #msgid = "7"
 from_addr = "bnsn.babu@gmail.com"
 to_addr = "xomo.xz@gmail.com"
 
+# open IMAP connection and fetch message with id msgid
+# store message data in email_data
 client = imaplib.IMAP4(imap_host)
 client.login(user, passwd)
 client.select('INBOX')
@@ -56,9 +59,7 @@ def is_connected(conn):
 
 smtp = create_conn()
 for i in msgnums[0].split():
-    # open IMAP connection and fetch message with id msgid
-    status, data = client.fetch(i, "(BODY.PEEK[HEADER])") # for only email header
-    # store message data in email_data
+    status, data = client.fetch(i, "(RFC822)")
     email_data = data[0][1]
     # create a Message instance from the email data
     message = email.message_from_string(email_data)
@@ -69,11 +70,8 @@ for i in msgnums[0].split():
 	    date = datetime.strptime(message_date, '%a, %d %b %Y %H:%M:%S')
 	except ValueError:
 	    logger_e.debug("Error: %s, %s" %(i, message_date))
-	if date.month == (8 or 9) and date.year == 2017:
-	    # for full emal(header+body+attachments)
-	    status, data = client.fetch(i, "(RFC822)") 
-	    email_data = data[0][1]
-   	    message = email.message_from_string(email_data)
+	date_diff = now-date
+	if date_diff.days <= 30:
 	    # replace headers (could do other processing here)
 	    message.replace_header("From", from_addr)
 	    message.replace_header("To", to_addr)
@@ -90,7 +88,6 @@ for i in msgnums[0].split():
 		smtp.sendmail(from_addr, to_addr, message.as_string())
 		logger_s.info('id: %s to_email: %s email_date: %s' %(i, to_addr, message_date))
 	    break
-	    
 smtp.quit()
 client.close()
 client.logout()
