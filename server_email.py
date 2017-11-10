@@ -11,6 +11,8 @@ from os.path import basename
 import logging
 
 
+test = False
+
 # create a logging format
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -35,6 +37,7 @@ def email_send(to, subject, msg, files=None):
         message['From'] = mail_from
         message['To'] = to
         message['reply-to'] = mail_box[i]
+	# message['Cc'] = ''
         message.attach(MIMEText(msg, 'html'))
         # Attachment code
 	for f in files or []:
@@ -45,7 +48,7 @@ def email_send(to, subject, msg, files=None):
                     )
             part['Content-Disposition'] = 'attachment; filename="%s"' % basename(f)
             message.attach(part)
-        smtpObj.sendmail("bounce-mail@fossee.in", to, message.as_string())
+        smtpObj.sendmail("bounce-mail@fossee.in", to, message.as_string()) # TOADDR+CCADDR to send to cc ids
 	logger_s.info('Sucessfully Sent to  %s', to)
         return True
     except smtplib.SMTPException, e:
@@ -53,13 +56,15 @@ def email_send(to, subject, msg, files=None):
 	return False
 
 def connectSMTP():
-    # smtpObj = smtplib.SMTP(host='smtp-auth.iitb.ac.in', port=25)
     smtpObj = smtplib.SMTP(host='localhost', port=25)
     smtpObj.ehlo()
     smtpObj.starttls()
-    # smtpObj.ehlo()
-    # smtpObj.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
-    # smtpObj.login(username, password)
+    if test:
+	smtpObj = smtplib.SMTP(host='smtp-auth.iitb.ac.in', port=25)
+	smtpObj.ehlo()
+	smtpObj.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
+	import local_setting
+	smtpObj.login(username, password)
     return smtpObj
 logger_s = setup_logger('mail_success.log', name='Success')
 logger_e = setup_logger('mail_error.log', name='Error')
