@@ -10,8 +10,13 @@ from mako.template import Template
 from os.path import basename
 import logging
 
-
+# global variables
 test = False
+smtp_host = 'localhost'
+smtp_port = 25
+if test:
+    smtp_host = 'smtp-auth.iitb.ac.in'
+
 
 # create a logging format
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -48,24 +53,38 @@ def email_send(to, subject, msg, files=None):
                     )
             part['Content-Disposition'] = 'attachment; filename="%s"' % basename(f)
             message.attach(part)
+	#print smtpObj.noop()[0]
+	#smtp_conn = is_connected(smtpObj)
+	#if not smtp_conn:
+	#    smtpObj = connectSMTP()
+	#    smtp_conn = True
+    	#if smtp_conn:
         smtpObj.sendmail("bounce-mail@fossee.in", to, message.as_string()) # TOADDR+CCADDR to send to cc ids
-	logger_s.info('Sucessfully Sent to  %s', to)
-        return True
+	#    logger_s.info('Sucessfully Sent to  %s', to)
+        #    return True
     except smtplib.SMTPException, e:
 	logger_e.debug('%s', e)
 	return False
 
 def connectSMTP():
-    smtpObj = smtplib.SMTP(host='localhost', port=25)
+    smtpObj = smtplib.SMTP(host=smtp_host, port=smtp_port)
     smtpObj.ehlo()
     smtpObj.starttls()
     if test:
-	smtpObj = smtplib.SMTP(host='smtp-auth.iitb.ac.in', port=25)
 	smtpObj.ehlo()
 	smtpObj.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
-	import local_setting
+	from local_settings import username, password
 	smtpObj.login(username, password)
     return smtpObj
+
+def is_connected(conn):
+    try:
+        status = conn.noop()[0]
+    except smtplib.SMTPServerDisconnected:
+        status = -1
+    return True if status == 250 else False
+
+
 logger_s = setup_logger('mail_success.log', name='Success')
 logger_e = setup_logger('mail_error.log', name='Error')
 
@@ -86,11 +105,22 @@ try:
     #                                                   #
     #####################################################
     
-    Note: It will send to scipy@fossee.in 
     """
 
-    i = 3 # input("Please select the desired Mail-box : ")
-
+    i = input("Please select the desired Mail-box : ")
+    # if you change the key of certificate in mail_box (0:'certificates@fossee.in') then change 'not i'to 'i == changed_key'
+    if not i:
+	while True:
+	    workshop_code = raw_input("Please select the Workshop Name (i-ISCP, b-BPPy): ")
+	    if workshop_code == 'i' or workshop_code == 'b':
+		break
+	    else:
+		continue
+    # to use the same template and send to both types of workshop
+    workshop_name = {
+		     'i': 'Introduction to Scientific Computing using Python',
+		     'b': 'Basic Programming using Python',
+    }
     mail_box = {
                 0:'certificates@fossee.in',
                 1:'workshops@fossee.in',
@@ -115,14 +145,16 @@ try:
     }
     for j, line in  enumerate(names_emails):
         msg_to_send = open(template_loc[i], 'r')
-        # fname, email = line.split(',') # only use when name is there in csv
+        #fname, email = line.split(',') # only use when name is there in csv
         fname = ''
+	if i:
+	    workshop_code = 'i'
         email = line.strip()
-        email = email.strip('\n')
-        templ = Template(msg_to_send.read()).render(fname=fname)
+	email = email.strip('\n')
+	templ = Template(msg_to_send.read()).render(fname=fname, workshop_name=workshop_name[workshop_code])
 	message = email_send(email, subject[i], templ, files)
+	time.sleep(20)
         msg_to_send.close()
-        time.sleep(30)
     smtpObj.quit()
     email_file.close()
     if not file_name == 'demo.csv':
