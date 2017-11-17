@@ -1,7 +1,9 @@
 import smtplib, imaplib, email
 from datetime import datetime
 import logging
+import time
 
+test = True
 
 # create a logging format
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -30,23 +32,31 @@ smtp_port = 25
 user = ""
 passwd = ""
 #msgid = "7"
-from_addr = "bnsn.babu@gmail.com"
-to_addr = "xomo.xz@gmail.com"
+from_addr = ""
+to_addr = ["example1@gmail.com", "emaple2@gmail.com"]
 
 # open IMAP connection and fetch message with id msgid
 # store message data in email_data
 client = imaplib.IMAP4(imap_host)
+if (user and passwd) == '' and test:
+    from local_settings import username, password
+    user = username
+    passwd = password
 client.login(user, passwd)
 client.select('INBOX')
-typ, msgnums = client.search(None, 'ALL')
+# client.search(None, 'ALL') # search for all mails
+# client.search(None, '(Subject, "keyword")') # search for keyword in subject of all mails
+typ, msgnums = client.search(None, '(Text "salary")') # search for keyword in sub + body of all mails
 
 def create_conn():
     smtp = smtplib.SMTP(smtp_host, smtp_port)
     smtp.ehlo()
     smtp.starttls()
-    smtp.ehlo()
-    smtp.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
-    smtp.login(user, passwd)
+    if test:
+	smtp.ehlo()
+	smtp.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
+	from local_settings import username, password
+	smtp.login(username, password)
     return smtp
 
 def is_connected(conn):
@@ -58,22 +68,31 @@ def is_connected(conn):
 
 smtp = create_conn()
 for i in msgnums[0].split():
-    status, data = client.fetch(i, "(RFC822)")
+    # client.fetch(i, "BODY[Header]") # only fetch header
+    status, data = client.fetch(i, "(RFC822)") # fetches body+Header
     email_data = data[0][1]
     # create a Message instance from the email data
     message = email.message_from_string(email_data)
+    if test:
+	pass
+        #print message
+        #continue
+	
     if 'Date' in message:
 	message_date = message['Date'].split()
-	message_date = ' '.join(message_date[:5])
+	message_date_s = ' '.join(message_date[:5])
 	try:
-	    date = datetime.strptime(message_date, '%a, %d %b %Y %H:%M:%S')
+	    date = datetime.strptime(message_date_s, '%a, %d %b %Y %H:%M:%S')
 	except ValueError:
-	    logger_e.debug("Error: %s, %s" %(i, message_date))
-	date_diff = now-date
-	if date_diff.days <= 30:
+	    message_date_s = ' '.join(message_date[:4])
+	    try:
+	        date = datetime.strptime(message_date_s, '%d %b %Y %H:%M:%S') 
+	    except ValueError:
+	        logger_e.debug("Error: %s, %s" %(i, message_date_s))
+	if date.month >= 10 and date.year==2017:
 	    # replace headers (could do other processing here)
 	    message.replace_header("From", from_addr)
-	    message.replace_header("To", to_addr)
+	    message.replace_header("To", ','.join(to_addr))
 	    if 'Cc' in message:
 		message.replace_header('Cc', ' ')
 	    # open authenticated SMTP connection and send message with
@@ -84,10 +103,10 @@ for i in msgnums[0].split():
 	        smtp = create_conn()
 		smtp_conn = True
 	    if smtp_conn:
+		time.sleep(20)
 		smtp.sendmail(from_addr, to_addr, message.as_string())
-		logger_s.info('id: %s to_email: %s email_date: %s' %(i, to_addr, message_date))
-	    break
+		logger_s.info('id: %s to_email: %s email_date: %s' %(i, to_addr, message_date_s))
+	    #break
 smtp.quit()
 client.close()
 client.logout()
-
