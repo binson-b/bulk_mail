@@ -54,14 +54,15 @@ def email_send(to, subject, msg, files=None):
             part['Content-Disposition'] = 'attachment; filename="%s"' % basename(f)
             message.attach(part)
 	#print smtpObj.noop()[0]
-	#smtp_conn = is_connected(smtpObj)
-	#if not smtp_conn:
-	#    smtpObj = connectSMTP()
-	#    smtp_conn = True
-    	#if smtp_conn:
-        smtpObj.sendmail("bounce-mail@fossee.in", to, message.as_string()) # TOADDR+CCADDR to send to cc ids
-	#    logger_s.info('Sucessfully Sent to  %s', to)
-        #    return True
+	global smtpObj
+	smtp_conn = is_connected(smtpObj)
+	if not smtp_conn:
+	    smtpObj = connectSMTP()
+	    smtp_conn = True
+    	if smtp_conn:
+            smtpObj.sendmail("bounce-mail@fossee.in", to, message.as_string()) # TOADDR+CCADDR to send to cc ids
+	    logger_s.info('Sucessfully Sent to  %s', to)
+            return True
     except smtplib.SMTPException, e:
 	logger_e.debug('%s', e)
 	return False
