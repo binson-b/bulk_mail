@@ -11,7 +11,7 @@ from os.path import basename
 import logging
 
 # global variables
-test = False
+test = True
 smtp_host = 'localhost'
 smtp_port = 25
 if test:
@@ -98,11 +98,12 @@ try:
     print """
     #####################################################
     #                                                   #
-    #  0:'certificates@fossee.in'                       #
-    #  1:'workshops@fossee.in'                          #
-    #  2:'coodinator-certificate'                       #
-    #  3:'scipy@fossee.in',                             #
-    #  9:'test@fossee.in'                               #
+    #  0: 'certificates@fossee.in'                      #
+    #  1: 'workshops@fossee.in'                         #
+    #  2: 'coodinator-certificate'                      #
+    #  3: 'scipy@fossee.in',				#
+    #  4: 'Scipy India 2017                             #
+    #  9: 'test@fossee.in'                              #
     #                                                   #
     #####################################################
     
@@ -123,26 +124,28 @@ try:
 		     'b': 'Basic Programming using Python',
     }
     mail_box = {
-                0:'certificates@fossee.in',
-                1:'workshops@fossee.in',
-                3:'scipy@fossee.in',
-                9:'test@fossee.in',
+                0: 'certificates@fossee.in',
+                1: 'workshops@fossee.in',
+                3: 'scipy@fossee.in',
+                9: 'test@fossee.in',
     }
-    mail_box.update({2: mail_box[0],})
+    mail_box.update({2: mail_box[0], 4: mail_box[0]})
     subject = {
-                0:'Python Workshop Certificate, FOSSEE',
-                1:'Remote-assisted Python Workshop by FOSSEE, IIT Bombay',
+                0: 'Python Workshop Certificate, FOSSEE',
+                1: 'Remote-assisted Python Workshop by FOSSEE, IIT Bombay',
                 3: 'SciPy 2017 invitation',
+		4: 'SciPy India 2017 Certificate, Fossee',
                 9: 'TEST'
     }
     subject.update({2: subject[0]})
     print 'mail-box: %s\nsubject: %s' % (mail_box[i], subject[i])
     template_loc = {
-                    0:os.path.abspath('html_templates/certificate_mail.html'),
-                    1:os.path.abspath('html_templates/python_workshop_invite_2017-0.html'),
-                    2:os.path.abspath('html_templates/coordinator_certificate.html'),
-                    3:os.path.abspath('html_templates/scipy_conference_2017_invite_email.html'),
-                    9:os.path.abspath('html_templates/test.html')
+                    0: os.path.abspath('html_templates/certificate_mail.html'),
+                    1: os.path.abspath('html_templates/python_workshop_invite_2017-0.html'),
+                    2: os.path.abspath('html_templates/coordinator_certificate.html'),
+                    3: os.path.abspath('html_templates/scipy_conference_2017_invite_email.html'),
+		    4: os.path.abspath('html_templates/scipy_participant_certificate_2017.html'),
+                    9: os.path.abspath('html_templates/test.html')
     }
     for j, line in  enumerate(names_emails):
         msg_to_send = open(template_loc[i], 'r')
