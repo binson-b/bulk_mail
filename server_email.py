@@ -49,8 +49,7 @@ def email_send(to, subject, msg, files=None):
             with open(f, "rb") as fil:
                 part = MIMEApplication(
                     fil.read(),
-                    Name=basename(f)
-                    )
+                    Name=basename(f))
             part['Content-Disposition'] = 'attachment; filename="%s"' % basename(f)
             message.attach(part)
 	#print smtpObj.noop()[0]
@@ -61,7 +60,7 @@ def email_send(to, subject, msg, files=None):
 	    smtp_conn = True
     	if smtp_conn:
             smtpObj.sendmail("bounce-mail@fossee.in", to, message.as_string()) # TOADDR+CCADDR to send to cc ids
-	    logger_s.info('Sucessfully Sent to  %s', to)
+            logger_s.info('Sucessfully Sent to  %s', to)
             return True
     except smtplib.SMTPException, e:
 	logger_e.debug('%s', e)
@@ -72,8 +71,8 @@ def connectSMTP():
     smtpObj.ehlo()
     smtpObj.starttls()
     if test:
-	smtpObj.ehlo()
-	smtpObj.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
+        smtpObj.ehlo()
+        smtpObj.esmtp_features['auth']='LOGIN DIGEST-MD5 PLAIN'
 	from local_settings import username, password
 	smtpObj.login(username, password)
     return smtpObj
@@ -97,12 +96,15 @@ try:
     smtpObj=connectSMTP()
     print """
     #####################################################
-    #                                                   #
-    #  0: 'certificates@fossee.in'                      #
+    #                      __ i(ISCP)                   #
+    #  0: 'certificates --|                             #
+    #                     |__ b(BPPy)                   #
     #  1: 'workshops@fossee.in'                         #
     #  2: 'coodinator-certificate'                      #
-    #  3: 'scipy@fossee.in',				#
-    #  4: 'Scipy India 2017                             #
+    #  3: 'scipy@fossee.in',                            #
+    #  4: 'Scipy India 2017,                            #
+    #  5: 'Python Newsletter'                           #
+    #  6: 'FOSSEE Connect'                              #
     #  9: 'test@fossee.in'                              #
     #                                                   #
     #####################################################
@@ -127,42 +129,53 @@ try:
                 0: 'certificates@fossee.in',
                 1: 'workshops@fossee.in',
                 3: 'scipy@fossee.in',
+                5: 'info@fossee.in',
                 9: 'test@fossee.in',
     }
-    mail_box.update({2: mail_box[0], 4: mail_box[0]})
+    mail_box.update({2: mail_box[0], 4: mail_box[0], 6: mail_box[1]})
     subject = {
                 0: 'Python Workshop Certificate, FOSSEE',
                 1: 'Remote-assisted Python Workshop by FOSSEE, IIT Bombay',
                 3: 'SciPy 2017 invitation',
-		4: 'SciPy India 2017 Certificate, Fossee',
+		4: 'SciPy India 2017 Certificate, FOSSEE',
+                5: 'FOSSEE Newsletter - Python',
+                6: 'TEST - FOSSEE Connect',
                 9: 'TEST'
     }
     subject.update({2: subject[0]})
-    print 'mail-box: %s\nsubject: %s' % (mail_box[i], subject[i])
     template_loc = {
                     0: os.path.abspath('html_templates/certificate_mail.html'),
                     1: os.path.abspath('html_templates/python_workshop_invite_2017-0.html'),
                     2: os.path.abspath('html_templates/coordinator_certificate.html'),
                     3: os.path.abspath('html_templates/scipy_conference_2017_invite_email.html'),
 		    4: os.path.abspath('html_templates/scipy_participant_certificate_2017.html'),
+		    5: os.path.abspath('html_templates/newsletter_email.html'),
+		    6: os.path.abspath('html_templates/fossee_connect.html'),
                     9: os.path.abspath('html_templates/test.html')
     }
-    for j, line in  enumerate(names_emails):
-        msg_to_send = open(template_loc[i], 'r')
-        #fname, email = line.split(',') # only use when name is there in csv
-        fname = ''
-	if i:
-	    workshop_code = 'i'
-        email = line.strip()
-	email = email.strip('\n')
-	templ = Template(msg_to_send.read()).render(fname=fname, workshop_name=workshop_name[workshop_code])
-	message = email_send(email, subject[i], templ, files)
-	time.sleep(20)
-        msg_to_send.close()
-    smtpObj.quit()
-    email_file.close()
-    if not file_name == 'demo.csv':
-        os.rename(file_name,file_name[:-4]+'-completed.csv')
+    print 'mail-box: %s\nsubject: %s\nfiles:%s\ntemplate:%s' % (mail_box[i], subject[i], files,
+                                                                template_loc[i])
+    proceed = raw_input("Do you want to proceed (Y/N): ")
+    proceed = proceed.lower()
+    if proceed == 'y':
+        for j, line in  enumerate(names_emails):
+            msg_to_send = open(template_loc[i], 'r')
+            #fname, email = line.split(',') # only use when name is there in csv
+            fname = ''
+            if i:
+                workshop_code = 'i'
+            email = line.strip()
+            email = email.strip('\n')
+            templ = Template(msg_to_send.read()).render(fname=fname, workshop_name=workshop_name[workshop_code])
+            message = email_send(email, subject[i], templ, files)
+            time.sleep(20)
+            msg_to_send.close()
+        smtpObj.quit()
+        email_file.close()
+        if not file_name == 'demo.csv':
+            os.rename(file_name,file_name[:-4]+'-completed.csv')
+    else:
+        exit()
 except IndexError:
     e = 'pass a single file argument after the python file'
     logger_e.debug('%s', e)
